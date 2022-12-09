@@ -1159,7 +1159,10 @@ def find_and_process_config(args):
     }
     # Traverse the file tree common to all files given as argument looking for
     # a configuration file
-    config_path = os.path.commonpath([os.path.abspath(file) for file in args["files"]])
+    files = [os.path.abspath(file) for file in args["files"]]
+    if "stdin_display_name" in args:
+        files.append(os.path.abspath(args["stdin_display_name"]))
+    config_path = os.path.commonpath(files)
     config = None
     while True:
         for config_file, processor in CONFIG_FILES.items():
@@ -1193,7 +1196,10 @@ def merge_configuration_file(flag_args):
 
     if "config_file" in flag_args:
         config_file = pathlib.Path(flag_args["config_file"]).resolve()
-        config = process_config_file(config_file)
+        if config_file.suffix == ".cfg":
+            config = process_config_file(config_file)
+        else:
+            config = process_pyproject_toml(config_file)
 
         if not config:
             _LOGGER.error(
